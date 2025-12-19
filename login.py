@@ -106,8 +106,7 @@ class WhatsappLogin:
         try:
             # Click "Login with phone number" button
             btn = page.get_by_role("button", name=re.compile("log.*in.*phone number", re.I))
-            if await btn.count() == 0:
-                await page.wait_for_timeout(3000)
+            await btn.wait_for(state="visible", timeout=3000)
             await btn.click(timeout=3000)
             await page.wait_for_load_state("networkidle")
         except PlaywrightTimeoutError:

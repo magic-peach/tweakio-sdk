@@ -10,49 +10,30 @@ from Shared_Resources import logger
 
 
 async def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> bool:
-    """
-    Performs a precise double click at the edge of a message element.
-
-    This is typically used to trigger context menus or special message interactions.
-    Handles scrolling if the element is out of viewport.
-
-    Args:
-        page (Page): Playwright page object.
-        message (ElementHandle | Locator): Message element or locator to click.
-
-    Returns:
-        bool: True if the click succeeded, False otherwise.
-    """
+    """For Replying , To double-click on the message"""
     try:
         if isinstance(message, Locator):
-            message = await message.element_handle()
+            message = await message.element_handle()  # Make it just before the clicking
 
-        attempts = 0
-        while not await message.bounding_box() and attempts < 20:
-            await page.mouse.wheel(0, -random.randint(150, 250))
-            await page.wait_for_timeout(random.randint(768, 1302))
-            attempts += 1
-            logger.info(f"Scrolling to message: attempt {attempts}")
+        await message.scroll_into_view_if_needed(timeout=2000)
+        condition = await sc.is_message_out(message)  # True = outgoing, False = incoming
 
-        condition = sc.is_message_out(message)  # True = outgoing, False = incoming
         box = await message.bounding_box()
         if not box:
-            logger.warning("[double_edge_click] Element bounding box not found after scrolling")
             return False
 
-        # Compute click coordinates relative to element
         rel_x = box["width"] * (0.2 if condition else 0.8)
         rel_y = box["height"] / 2
 
-        await page.mouse.move(rel_x, rel_y)
         await message.click(
-            position={"x": rel_x, "y": rel_y},  # Relative click
+            position={"x": rel_x, "y": rel_y},
             click_count=2,
             delay=random.randint(38, 69),
             timeout=3000
         )
 
-        await page.wait_for_timeout(500)  # Small pause for UI reaction
+        # small pause to let UI react
+        await page.wait_for_timeout(timeout=500)
         return True
 
     except Exception as e:

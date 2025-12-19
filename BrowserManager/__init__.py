@@ -201,10 +201,13 @@ class BrowserManager:
                     user_data_dir=self.cache_dir_path
                 ).__aenter__()
         except camoufox.exceptions.InvalidIP:
-            logger.info(f"Camoufox IP failed ,Trials: {tries} retrying...")
-            await self.__GetBrowser__(tries=tries+1)
-
+            if tries == 5 :
+                logger.error(f"Max Tries done {tries} . Exiting.")
+            else :
+                logger.info(f"Camoufox IP failed ,Trials: {tries} retrying...")
+                await self.__GetBrowser__(tries=tries+1)
         return Browser
+
 
     async def CloseBrowser(self):
         """

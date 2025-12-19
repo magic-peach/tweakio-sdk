@@ -1,6 +1,18 @@
 .venv
 .idea
 
-/NextUpdate
-/testmodule.py
-/play.py
+/test/NextUpdate
+/test/testmodule.py
+/test/play.py
+/test/sqltest.py
+/test
+.qodo
+/Report
+
+# Python Packaging
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.py[cod]
+tweakio.db

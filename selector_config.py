@@ -193,7 +193,13 @@ async def get_message_text(message_element: Union[ElementHandle, Locator]) -> st
         if message_element is None:
             return ""
 
-    span = await message_element.query_selector("span.selectable-text.copyable-text")
+    # OLD: span.selectable-text.copyable-text (Class 'selectable-text' removed in recent WA updates)
+    # NEW: span[data-testid="selectable-text"] OR span.copyable-text
+    span = await message_element.query_selector("span[data-testid='selectable-text']")
+    if not span:
+        # Fallback to class only
+        span = await message_element.inner_text(); 
+    
     if span and await span.is_visible():
         text = await span.text_content()
         return text or ""
@@ -293,11 +299,12 @@ async def isReacted(message: Union[ElementHandle, Locator]) -> bool:
         return False
 
 
-async def pic_handle(message: ElementHandle) -> bool:
-    pic = await message.query_selector(
-        "xpath=.//div[@role='button' and "
-        "translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='open picture']//img"
-    )
+async def pic_handle(message: ElementHandle, page : Page) -> bool:
+    # pic = await message.query_selector(
+    #     "xpath=.//div[@role='button' and "
+    #     "translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='open picture']//img"
+    # )
+    pic = page.get_by_role("button", name=re.compile("open picture", re.I))
     if pic and await pic.is_visible():
         return True
     pic2 = await message.query_selector("xpath=.//img[contains(@src,'data:image/')]")

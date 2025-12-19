@@ -237,59 +237,22 @@ async def get_Timestamp(message: Union[ElementHandle, Locator]) -> str:
 
 
 # ----------------------
-# Trace message
+# Use raw dictionaries for data handling
 # ----------------------
 
-class TracerOBJ:
-    """
-    Wrapper class for message trace dictionaries.
-    Allows dot-access to all fields (e.g. obj.direction).
-    All fields are stored as strings. Missing keys default to 'None'.
-    """
-
-    def __init__(self, data: dict = None):
-        data = data or {}
-        def str_or_none(val):
-            """Wrapper for value if exists else  Empty value  """
-            return str(val) if val is not None else ""
-
-        # Explicit fields with string conversion
-        self.chat: str = str_or_none(data.get("chat"))
-        self.community: str = str_or_none(data.get("community"))
-        self.jid: str = str_or_none(data.get("jid"))
-        self.message: str = str_or_none(data.get("message"))
-        self.sender: str = str_or_none(data.get("sender"))
-        self.time: str = str_or_none(data.get("time"))
-        self.systime: str = str_or_none(data.get("systime", time.time()))
-        self.direction: str = str_or_none(data.get("direction"))
-        self.type: str = str_or_none(data.get("type"))
-
-        # Any extra fields not listed above, converted to str
-        self.extra = {k: str(v) for k, v in data.items()
-                      if k not in {"chat", "community", "jid", "message", "sender", "time", "systime", "direction", "type"}}
-
-    def __repr__(self):
-        attrs = ", ".join(f"{k}={v!r}" for k, v in self.__dict__.items())
-        return f"<TracerOBJ {attrs}>"
-
-    def to_dict(self) -> dict:
-        """Convert back to dictionary with all values as strings."""
-        d = {k: v for k, v in self.__dict__.items() if k != "extra"}
-        d.update(self.extra)
-        return d
 
 
-
-async def trace_message(
-        seen_messages: dict,
+async def Trace_dict(
         chat: Union[ElementHandle, Locator],
         message: Union[ElementHandle, Locator],
-        data_id : str) -> Optional[bool]:
-    """Tracks a unique message and stores its details if not already seen.
-    return true if success in tracing message else false and None on error.
+        data_id : str) -> Optional[dict]:
+    """
+    Extracts message details and returns a dictionary.
+    Does NOT store in a global dict anymore.
     """
     try:
-        seen_messages[data_id] = {
+        data = {
+            "data_id": data_id,
             "chat": await sc.getChatName(chat),
             "community": await sc.is_community(chat),
             "jid": await getJID_mess(message),
@@ -300,20 +263,10 @@ async def trace_message(
             "direction": await getDirection(message),
             "type": await GetMessType(message),
         }
-        return True
+        return data
     except Exception as e:
         logger.error(f"Error in trace_message {e}", exc_info=True)
-    return False
+        return None
 
 
-def cleanFolder(folder: pa.Path) -> None:
-    """This one stays sync — it's just filesystem operations."""
-    if folder.exists():
-        for item in folder.iterdir():
-            try:
-                if item.is_file():
-                    item.unlink()
-                elif item.is_dir():
-                    shutil.rmtree(item)
-            except Exception as e:
-                logger.error(f"Error in cleanFolder {e}", exc_info=True)
+

@@ -10,7 +10,6 @@ import Extra as ex
 import directory as dirs
 import selector_config as sc
 from Errors import MessageNotFound
-from Extra import TracerOBJ
 from Shared_Resources import logger
 
 
@@ -61,7 +60,10 @@ class MessageLoader:
         self.default: bool
         self.page: Page = page
         self.trace_path = trace_path
-        self.TracerDICT: dict = {}  # Temporary Based Running
+        
+        # Initialize Persistent Storage
+        from Storage import Storage
+        self.storage = Storage()
 
     async def _GetScopedMessages(self, incoming: bool, outgoing: bool) -> Locator:
         self.incoming = incoming
@@ -91,39 +93,44 @@ class MessageLoader:
         For single Set of Fetching , give cycle = 0 else default is 5.
         pollingTime is the waiting time for next fetch of new Messages.
         """
-
         try:
             await chat_id.click(timeout=3000)
-            messages: Locator = await self._GetScopedMessages(incoming, outgoing)
-            count: int = await messages.count()
+            
+            # Iterative loop logic
+            while True:
+                messages: Locator = await self._GetScopedMessages(incoming, outgoing)
+                count: int = await messages.count()
 
-            if count == 0:
-                raise MessageNotFound()
+                if count == 0:
+                    raise MessageNotFound()
 
-            for i in range(count):
-                msg = messages.nth(i)  # Msg Element
-                txt : str = await sc.get_message_text(msg)  # Text Message of the Msg
+                for i in range(count):
+                    msg = messages.nth(i)  # Msg Element
+                    txt : str = await sc.get_message_text(msg)  # Text Message of the Msg
 
-                data_id: str = await sc.get_dataID(msg)
-                if not data_id:
-                    raise Exception("Data ID null in the Live Messages")
+                    data_id: str = await sc.get_dataID(msg)
+                    if not data_id:
+                        continue
 
-                if data_id not in self.TracerDICT:
-                    tracing: bool = await ex.trace_message(
-                        seen_messages=self.TracerDICT,
-                        message=msg,
-                        chat=chat_id,
-                        data_id=data_id)  # Tracing Automatically
+                    if not self.storage.message_exists(data_id):
+                        msg_data = await ex.Trace_dict(
+                            chat=chat_id,
+                            message=msg,
+                            data_id=data_id)
+                        
+                        if msg_data:
+                            inserted = self.storage.insert_message(msg_data)
+                            if inserted:
+                                yield msg, txt, True, msg_data
+                        else:
+                            yield msg, txt, False, {} # Failed to trace
 
-                    # Yielding 4 params msg locator , txt str , tracing bool , tracer dict if tracing else {}
-                    yield msg, txt, tracing, TracerOBJ(self.TracerDICT[data_id]) if tracing else TracerOBJ()
-
-            if cycle == 0: return
-
-            await asyncio.sleep(pollingTime)
-            async for m in self.LiveMessages(chat_id, cycle - 1, incoming, outgoing, pollingTime):
-                yield m
-
+                if cycle == 0:
+                    break
+                
+                cycle -= 1
+                await asyncio.sleep(pollingTime)
 
         except Exception as e:
             logger.error(f" -- Error in LiveMessages -- {e}", exc_info=True)
+

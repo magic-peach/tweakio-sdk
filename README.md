@@ -1,73 +1,105 @@
-# Tweakio-Whatsapp Library
+# 🚀 Tweakio-Whatsapp Library
 
-This repository provides a developer-friendly toolkit for **WhatsApp automation**, with modular components for building pipelines and advanced automation workflows. This library is designed for developers who want to **automate WhatsApp tasks** efficiently and safely, while leveraging modern automation techniques.
-
-We are also working on a **research paper** that studies WhatsApp security and automation practices. The link to the paper will be added once published.
-
----
-
-## Features
-
-* **Modern automation stack**: Built on **Playwright (Python)** for reliable browser automation.
-* **Modular design**: Includes components like `ChatRoller`, `MessageLoader`, `BrowserIntegrate`, and more.
-* **Human-like automation**: Simulates realistic typing and mouse behavior.
-* **Extensible selectors**: Priority selector API for handling dynamic UI elements.
-* **Document and message handling**: Send and receive different types of messages seamlessly.
-* **Template for developers and small businesses**: Build WhatsApp integrations without using the official WhatsApp Business API.
+> **The Developer-First WhatsApp Automation Toolkit**  
+> _Built on Playwright, Camoufox & BrowserForge for maximum reliability and undetectability._
 
 ---
 
-## Example Usage
+This repository provides a powerful, modular toolkit for **WhatsApp automation**. Unlike standard libraries, Tweakio is designed for **modern, human-like interactions**, ensuring safety and longevity for your automation pipelines.
 
-```python
-import login
-import BrowserManager as bm
+Whether you are building a smart chatbot, an automated alert system, or a workflow for your business, Tweakio gives you the granular control you need.
 
-# Create Browser Manager instance
-b = bm.BrowserManager(override_cookies=True) # You can override for new setup or just don't pass anything.
-page = await b.getPage() # Get Page directly from it.
+---
 
-# Login to your account
-wp_login = login.WhatsappLogin(page=page, number="63980 xxxxx", country="india",override_login=True) #Same you can override or not
-await wp_login.login()
+## ✨ Features
 
-# This is minimal Setup only for login to your account. You can build your own pipeline using the modular components provided in the library.
-# Also, you can use Chat Loader and Message Loader to send messages to multiple contacts.
+*   **🛡️ Anti-Detection First**: Built on **Playwright + Camoufox** to mimic real browser fingerprints.
+*   **🧩 Modular Architecture**: Components like `ChatRoller`, `MessageLoader`, and `BrowserManager` work together or standalone.
+*   **🤖 Human-Like Behavior**: Simulates natural typing speeds, mouse movements, and pauses.
+*   **📡 SQLite Integration**: Built-in persistence for message history and state management.
+*   **⚡ Dynamic Selectors**: Smart element detection that adapts to WhatsApp Web UI changes.
+
+---
+
+## 📦 Installation
+
+```bash
+pip install tweakio-whatsapp
 ```
 
-> This example demonstrates a simple automation pipeline. More advanced integrations can be built using the modular components of the library.
+_Note: Requires Python 3.8+_
 
 ---
 
-## Why Use This Library?
+## ⚡ Quick Start
 
-1. Uses **modern technology** (Playwright) for reliable automation.
-2. Implements **humanized interactions** to make automation realistic.
-3. **Improves on other libraries** by addressing fragile selectors and providing a priority selector API.
-4. Provides a **base template** for developers and small businesses to build WhatsApp automation workflows.
-5. Supports **advanced functionality** like document handling, profile clickers, and custom message parsing.
+Here is a complete, working example to login and start listening for messages:
+
+```python
+import asyncio
+from tweakio_whatsapp import BrowserManager, WhatsappLogin, MessageLoader, ChatLoader
+
+async def main():
+    # 1️⃣ Initialize Browser with Anti-Detect capabilities
+    browser_manager = BrowserManager(headless=False)
+    page = await browser_manager.getPage()
+
+    # 2️⃣ Perform Login (Scan QR Code if needed)
+    wp_login = WhatsappLogin(page=page)
+    await wp_login.login()
+
+    # 3️⃣ Start Message Loader & Chat Loader
+    loader = MessageLoader(page=page)
+    chat_loader = ChatLoader(page=page)
+
+    print("🚀 Listening for messages...")
+
+    # 4️⃣ Iterate through chats and fetch messages
+    async for chat, name in chat_loader.ChatRoller(cycle=1, MaxChat=3):
+        print(f"📂 Checking Chat: {name}")
+        
+        async for msg, text, success, data in loader.LiveMessages(
+            chat_id=chat, 
+            cycle=3  # Check for 3 cycles of live updates
+        ):
+            print(f"   📩 New Message: {text}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+> **💡 Pro Tip:** Check `test/play.py` in the repository for a more advanced example including chat navigation!
 
 ---
 
-## Roadmap
+## 🛠️ Modules Overview
 
-* Adding more modules like **ChatRoller**, **MessageLoader**, and **BrowserIntegrate** with anti-detection techniques.
-* Expanding **priority selector functionality** for dynamic UI elements.
-* Publishing a **research paper** on WhatsApp automation and security.
-
----
-
-## Contributing
-
-Contributors are welcome! Feel free to:
-
-* Report issues and bugs.
-* Suggest improvements.
-* Contribute code via pull requests.
+| Module | Description |
+| :--- | :--- |
+| **BrowserManager** | Handles browser creation, fingerprinting, and proxy management. |
+| **WhastappLogin** | Manages QR scanning, session saving, and login verification. |
+| **MessageLoader** | Fetches historical and live messages with duplicate protection. |
+| **Storage** | SQLite wrapper for efficient message storage and retrieval. |
+| **ChatRoller** | Automates scrolling and loading old chats. |
 
 ---
 
-## License
+## 🤝 Contributing
 
-This project is licensed under the [MIT License](LICENSE).
+We welcome contributions! If you have ideas for new features or bug fixes:
 
+1.  Fork the repo 🍴
+2.  Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request 🚀
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+_Made with passion by the Tweakio Team_
