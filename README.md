@@ -14,8 +14,9 @@ Whether you are building a smart chatbot, an automated alert system, or a workfl
 ## ✨ Features
 
 *   **🛡️ Anti-Detection First**: Built on **Playwright + Camoufox** to mimic real browser fingerprints.
-*   **🧩 Modular Architecture**: Components like `ChatRoller`, `MessageProcessor`, and `BrowserManager` work together or standalone.
+*   **🧩 Modular Architecture**: Components like `ChatLoader`, `MessageProcessor`, and `BrowserManager` work together or standalone.
 *   **🤖 Human-Like Behavior**: Simulates natural typing speeds, mouse movements, and pauses.
+*   **📦 Rich Metadata**: New `Chat` and `Message` dataclasses for structured data handling.
 *   **⚡ High-Performance Storage**: **Async Queue-based SQLite** integration for blocking-free message persistence.
 *   **⚖️ Intelligent Rate Limiting**: Built-in protection against number bans via smart request throttling.
 *   **📡 Dynamic Selectors**: Smart element detection that adapts to WhatsApp Web UI changes.
@@ -35,7 +36,7 @@ _Currently we are supporting Whatsapp Web but in future we will add more support
 
 ## ⚡ Quick Start
 
-Here is a complete, working example using the latest **MessageProcessor** API:
+Here is a complete, working example using the latest **Fetcher** API:
 
 ```python
 import asyncio
@@ -52,19 +53,19 @@ async def main():
     await wp_login.login()
 
     # 3️⃣ Start Message Processor & Chat Loader
-    # MessageProcessor handles rate limiting and async storage automatically
     processor = MessageProcessor(page=page)
     chat_loader = ChatLoader(page=page)
 
-    print("🚀 Listening for messages...")
+    print("🚀 Fetching chats...")
 
     # 4️⃣ Iterate through chats and process messages
-    async for chat, name in chat_loader.ChatRoller(cycle=1, MaxChat=3):
+    # Fetcher returns a Chat object (metadata) and the chat name
+    async for chat, name in chat_loader.Fetcher(MaxChat=5):
         print(f"📂 Checking Chat: {name}")
 
         messages = await processor.MessageFetcher(chat=chat)
         for msg in messages:
-            print(f"   📩 New Message: {msg.text} (Direction: {msg.Direction})")
+            print(f"   📩 Message: {msg.text} (ID: {msg.data_id})")
 
 
 if __name__ == "__main__":
@@ -83,7 +84,7 @@ if __name__ == "__main__":
 | **WhastappLogin** | Manages QR scanning, session saving, and login verification. |
 | **MessageProcessor** | Fetches, traces, and filters messages with built-in rate limiting. |
 | **Storage** | Async queue-powered SQLite wrapper for efficient persistence. |
-| **ChatRoller** | Automates scrolling and loading old chats. |
+| **ChatLoader** | Handles chat fetching and unread status via the `Fetcher` API. |
 
 ---
 
