@@ -198,7 +198,7 @@ async def get_message_text(message_element: Union[ElementHandle, Locator]) -> st
     span = await message_element.query_selector("span[data-testid='selectable-text']")
     if not span:
         # Fallback to class only
-        span = await message_element.inner_text(); 
+        span = await message_element.inner_text()
     
     if span and await span.is_visible():
         text = await span.text_content()

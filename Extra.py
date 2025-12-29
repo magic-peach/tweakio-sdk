@@ -3,11 +3,8 @@ Util Doc for tweakio-whatsapp library
 Todo Convert to a Fully Utils class ---------------------------------------------------------
 """
 import asyncio
-import pathlib as pa
 import random
-import shutil
-import time
-from typing import Union, Optional
+from typing import Union
 
 from playwright.async_api import Page, ElementHandle, Locator
 
@@ -189,7 +186,7 @@ async def getDirection(message: Union[ElementHandle, Locator]) -> str:
 # Message type
 # ----------------------
 async def GetMessType(message: Union[ElementHandle, Locator]) -> str:
-    """Returns the specific type of message: image, video, audio, gif, sticker, quoted, text"""
+    """Returns the specific type of message: image, video, audio, GIF, sticker, quoted, text"""
     if isinstance(message, Locator):
         message = await message.element_handle(timeout=1001)
 
@@ -197,13 +194,14 @@ async def GetMessType(message: Union[ElementHandle, Locator]) -> str:
         if await sc.isVideo(message):
             return "video Message"
 
-        if await sc.pic_handle(message):
-            return "image Message"
+        # Todo pic handle
+        # if await sc.pic_handle(message, page):
+        #     return "image Message"
 
         if await sc.is_Voice_Message(message):
             return "Voice Message"
 
-        q =await sc.isQuotedText(message)
+        q = await sc.isQuotedText(message)
         if q and await q.is_visible():
             return "quoted"
 
@@ -234,39 +232,3 @@ async def get_Timestamp(message: Union[ElementHandle, Locator]) -> str:
     except Exception as e:
         logger.error(f"Error in get_Timestamp {e}", exc_info=True)
         return ""
-
-
-# ----------------------
-# Use raw dictionaries for data handling
-# ----------------------
-
-
-
-async def Trace_dict(
-        chat: Union[ElementHandle, Locator],
-        message: Union[ElementHandle, Locator],
-        data_id : str) -> Optional[dict]:
-    """
-    Extracts message details and returns a dictionary.
-    Does NOT store in a global dict anymore.
-    """
-    try:
-        data = {
-            "data_id": data_id,
-            "chat": await sc.getChatName(chat),
-            "community": await sc.is_community(chat),
-            "jid": await getJID_mess(message),
-            "message": await sc.get_message_text(message),
-            "sender": await getSenderID(message),
-            "time": await get_Timestamp(message),
-            "systime": str(int(time.time())),
-            "direction": await getDirection(message),
-            "type": await GetMessType(message),
-        }
-        return data
-    except Exception as e:
-        logger.error(f"Error in trace_message {e}", exc_info=True)
-        return None
-
-
-

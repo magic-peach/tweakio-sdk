@@ -18,3 +18,11 @@ __pycache__/
 tweakio.db
 
 __pycache__
+.venv
+Design
+design
+tweakio_browser_playwright
+.vscode
+tests
+
+

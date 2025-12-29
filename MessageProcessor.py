@@ -4,7 +4,7 @@ Message Class for WhatsApp chats
 import time
 from dataclasses import dataclass, field
 from queue import Queue
-from typing import Union, List, Dict, Literal, Optional
+from typing import Union, List, Dict, Tuple, Literal, Optional, Any
 
 from playwright.async_api import Page, Locator, ElementHandle
 
@@ -60,27 +60,41 @@ class MessageProcessor:
         from Storage import Storage
         self.storage = Storage()
 
-    @staticmethod
     async def _wrappedMessageList(
+            self,
             chat: Union[Locator, ElementHandle]
     ) -> List[Message]:
         await chat.click(timeout=3000)
-
         wrapped: List[Message] = []
-        all_msgs = sc.messages(page=self.page)
+        try:
+            all_msgs = sc.messages(page=self.page)
 
-        count = await all_msgs.count()
-        for i in range(count):
-            msg = all_msgs.nth(i)
-            text = await sc.get_message_text(msg)
-            wrapped.append(
-                Message(
-                    messageUI=msg,
-                    Direction="in" if await msg.locator(".message-in").count() > 0 else "out",
-                    text=text
+            count = await all_msgs.count()
+            for i in range(count):
+                msg = all_msgs.nth(i)
+                text = await sc.get_message_text(msg)
+                data_id = await sc.get_dataID(msg)
+
+                retry = 0
+                while not data_id and retry < 3:
+                    data_id = await sc.get_dataID(msg)
+                    retry += 1
+
+                if not data_id: continue
+
+                wrapped.append(
+                    Message(
+                        MessageUI=msg,
+                        Direction="in" if await msg.locator(".message-in").count() > 0 else "out",
+                        text=text,
+                        ChatUI=chat,
+                        data_id=data_id
+                    )
                 )
-            )
-        return wrapped
+            return wrapped
+        except Exception as e:
+            logger.error(f"[MessageProcessor] Not  {e}", exc_info=True)
+            return wrapped
 
     async def MessageFetcher(
             self,
@@ -90,28 +104,15 @@ class MessageProcessor:
         Fetch messages → trace → filter → return deliverable messages
         """
         try:
-            messages: List["Message"] = await MessageProcessor._wrappedMessageList(chat=chat)
+            messages = await self._wrappedMessageList(chat)
+            assert all(m.data_id for m in messages)
+            """
+            “Every Message entering MessagesList has a non-null data_id.”
+            """
             if not messages:
                 raise MessageNotFound()
 
-            for msg in messages:
-                data_id = await sc.get_dataID(msg.messageUI)
-                if not data_id:
-                    continue
-
-                if self.storage.message_exists(data_id):
-                    continue
-
-                trace_data = await ex.Trace_dict(
-                    chat=chat,
-                    message=msg.messageUI,
-                    data_id=data_id,
-                )
-
-                if not (trace_data and self.storage.insert_message(trace_data)):
-                    msg.Failed = True
-
-            # Todo Fix to Message Wrapper class List
+            await self.storage.enqueue_insert(messages)  # Non-blocking queue
 
             return self.Filter(chat, messages)
 
@@ -207,11 +208,13 @@ class Message:
     """
     Message wrapper for filtered parsing
     """
-    messageUI: Union["Locator", "ElementHandle"]
+    MessageUI: Union["Locator", "ElementHandle"]
+    data_id: Optional[str]
     Direction: Literal["in", "out"]
     System_Hit_Time: float = field(default_factory=time.time)
-    Failed: bool = False
+    Failed: Optional[bool] = False
     text: Optional[str] = None
+    ChatUI: Optional[Union["Locator", "ElementHandle"]] = None
 
     @staticmethod
     def GetIncomingMessages(MsgList: List["Message"]) -> List["Message"]:
@@ -230,3 +233,23 @@ class Message:
             if msg.Direction == "out":
                 Mlist.append(msg)
         return Mlist
+
+    async def GetTraceObj(self) -> Tuple[Any, ...]:
+        """Returns Tuple for Tracing for this message for DATABASE"""
+        chat = await sc.getChatName(self.ChatUI)
+        community = await sc.is_community(self.ChatUI)
+        jid = await ex.getJID_mess(self.MessageUI)
+        sender = await ex.getSenderID(self.MessageUI)
+        msg_type = await ex.GetMessType(self.MessageUI)
+
+        return (
+            self.data_id,
+            chat,
+            community,
+            jid,
+            self.text,
+            sender,
+            str(int(self.System_Hit_Time)),
+            self.Direction,
+            msg_type,
+        )
