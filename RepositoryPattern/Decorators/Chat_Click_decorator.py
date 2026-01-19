@@ -1,18 +1,20 @@
 import asyncio
 import functools
+
 from Shared_Resources import logger
 
-def ensure_chat_clicked():
-    """Ensure that the chat click decorator is enabled"""
+
+def ensure_chat_clicked(chat_click_fn, retries=3, delay=0.5):
+    """
+    Decorator to ensure a chat is clicked using a provided click function.
+    The function should be: async def(chat) -> bool
+    """
 
     def decorator(func):
-        """Decorator"""
-
         @functools.wraps(func)
         async def wrapper(self, chat, *args, **kwargs):
-            """Wrapper function with retry click logic"""
             for attempt in range(1, retries + 1):
-                clicked = await self.chat_loader.click_chat(chat)
+                clicked = await chat_click_fn(self, chat)
                 if clicked:
                     break
                 logger.warning(f"[{func.__name__}] Click attempt {attempt} failed.")

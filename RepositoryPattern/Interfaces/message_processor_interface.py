@@ -4,24 +4,27 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from MessageInterface import Message_Interface
+from RepositoryPattern.Interfaces.Chat_Interface import chat_interface
+from message_Interface import message_interface
+from storage import storage
 
-from Storage import Storage
 
-
-class Message_Processor_Interface(ABC):
+class message_processor_interface(ABC):
     """
     Message Processor Interface for Messages
     """
-    Storage: Optional[Storage]
+    Storage: Optional[storage]
 
     @abstractmethod
-    async def _get_wrapped_Messages(self, *args, **kwargs) -> List[Message_Interface]: pass
+    async def _get_wrapped_Messages(self, retry: int, *args, **kwargs) -> List[message_interface]: pass
 
     @abstractmethod
-    async def Fetcher(self, *args, **kwargs) -> List[Message_Interface]:
+    async def Fetcher(self, chat: chat_interface, retry: int, *args, **kwargs) -> List[message_interface]:
         """
         Returns the List of Total messages in that open Chat/Contact.
         Flexibility with batch processing & Safer Filtering approaches.
         """
         pass
+
+
+2

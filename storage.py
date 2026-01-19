@@ -7,7 +7,7 @@ from MessageProcessor import Message
 from Shared_Resources import logger
 
 
-class Storage:
+class storage:
     """Handles the DB queries with async queue-based writes"""
     def __init__(self, db_path: str = "tweakio.db"):
         self.db_path = db_path

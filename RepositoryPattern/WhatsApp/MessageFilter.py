@@ -1,0 +1,1 @@
+"""Idependent class for Message Filtering"""

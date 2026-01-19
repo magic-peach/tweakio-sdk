@@ -14,7 +14,7 @@ import directory as dirs
 import selector_config as sc
 from Errors import MessageNotFound
 from Shared_Resources import logger
-from Storage import Storage
+from storage import storage
 
 @dataclass
 class ChatState:
@@ -137,13 +137,13 @@ class MessageProcessor:
         self.DeferQueue: Queue["BindChat"] = Queue()
 
         # Persistent storage
-        self.storage = Storage()
+        self.storage = storage()
 
     async def _wrappedMessageList(
             self,
             chat: Union[Locator, ElementHandle, Chat]
     ) -> List[Message]:
-        # Handle the new Chat object if passed
+        # Handle the new Chat object
         chat_ui = chat.ChatUI if hasattr(chat, 'ChatUI') else chat
         
         await chat_ui.click(timeout=3000)

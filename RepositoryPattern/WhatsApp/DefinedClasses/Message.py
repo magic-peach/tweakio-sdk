@@ -4,22 +4,24 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Union
+from typing import Union, Literal
 
 from playwright.async_api import ElementHandle, Locator
 
-from RepositoryPattern.Interfaces.Message_Interface import Message_interface
+from RepositoryPattern.Interfaces.message_Interface import message_interface
 from Chat import whatsapp_chat
 
 
 @dataclass
-class WhatsappMessage(Message_interface):
+class whatsapp_message(message_interface):
     """WhatsApp Message Class contracted with Message Interface Template"""
+    Direction : Literal["in", "out"]
+    data_id : str
 
     System_Hit_Time: float = field(default_factory=time.time)
     raw_Data: str
     data_type: str
-    Parent_Chat: whatsapp_chat
+    parent_chat: whatsapp_chat
     MessageID: str
     MessageUI: Union[ElementHandle, Locator]
 
@@ -27,5 +29,5 @@ class WhatsappMessage(Message_interface):
         self.MessageID = self._message_key(self)
 
     @staticmethod
-    def _message_key(message: WhatsappMessage) -> str:
+    def _message_key(message: whatsapp_message) -> str:
         return str(id(message))

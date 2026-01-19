@@ -8,13 +8,13 @@ from ChatInterface import ChatInterface
 from playwright.async_api import ElementHandle, Locator
 
 
-class Message_interface(ABC):
+class message_interface(ABC):
     """Message Interface"""
 
     System_Hit_Time: float
     raw_Data: str
     data_type: str
-    Parent_Chat: ChatInterface
+    parent_chat: ChatInterface
     MessageUI: Optional[Union[ElementHandle, Locator]]
     MessageID: Optional[str]
 
