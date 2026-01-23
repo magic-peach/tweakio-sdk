@@ -1,25 +1,35 @@
-# 🚀 Tweakio-Whatsapp Library
+# 🚀 Tweakio-SDK
 
-> **The Developer-First WhatsApp Automation Toolkit**  
+> **The Production-Grade, Multi-Platform Communication Automation Framework**  
 > _Built on Playwright, Camoufox & BrowserForge for maximum reliability and undetectability._
+
+[![PyPI version](https://badge.fury.io/py/tweakio-SDK.svg)](https://pypi.org/project/tweakio-SDK/)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
 ---
 
-This repository provides a powerful, modular toolkit for **WhatsApp automation**. Unlike standard libraries, Tweakio is designed for **modern, human-like interactions**, ensuring safety and longevity for your automation pipelines.
+## 🎯 Vision
 
-Whether you are building a smart chatbot, an automated alert system, or a workflow for your business, Tweakio gives you the granular control you need.
+Tweakio-SDK isn't just a WhatsApp bot—it's a **multi-platform communication automation framework** designed with production-grade architecture patterns.
+
+**Current**: WhatsApp Web automation (v0.1.4)  
+**Future**: Telegram, Instagram, Discord, and custom platforms—all sharing the same Core.
+
+Whether you're building intelligent chatbots, automated alert systems, or multi-account management tools, Tweakio provides the **platform-agnostic foundation** you need.
 
 ---
 
 ## ✨ Features
 
-*   **🛡️ Anti-Detection First**: Built on **Playwright + Camoufox** to mimic real browser fingerprints.
-*   **🧩 Modular Architecture**: Components like `ChatLoader`, `MessageProcessor`, and `BrowserManager` work together or standalone.
-*   **🤖 Human-Like Behavior**: Simulates natural typing speeds, mouse movements, and pauses.
-*   **📦 Rich Metadata**: New `Chat` and `Message` dataclasses for structured data handling.
-*   **⚡ High-Performance Storage**: **Async Queue-based SQLite** integration for blocking-free message persistence.
-*   **⚖️ Intelligent Rate Limiting**: Built-in protection against number bans via smart request throttling.
-*   **📡 Dynamic Selectors**: Smart element detection that adapts to WhatsApp Web UI changes.
+*   **🌐 Multi-Platform Ready**: Modular architecture with platform-specific implementations (`src/WhatsApp/`, future: `src/Telegram/`, `src/Instagram/`)
+*   **🛡️ Anti-Detection First**: Built on **Playwright + Camoufox** to mimic real browser fingerprints
+*   **🔄 Multi-Account Support**: Manage multiple accounts with isolated browser contexts
+*   **🧩 Plugin Architecture**: Add features without touching the Core (Interface-based design)
+*   **🤖 Human-Like Behavior**: Natural typing speeds, mouse movements, and intelligent pauses
+*   **📦 Rich Metadata**: Type-safe `Chat` and `Message` dataclasses
+*   **⚡ Async-First Design**: Non-blocking SQLite writes with background queue workers
+*   **⚖️ Intelligent Rate Limiting**: Configurable window-based throttling to prevent bans
+*   **📡 Dynamic Selectors**: Adaptive element detection that survives UI changes
 
 ---
 
@@ -112,4 +122,25 @@ Tweakio-SDK v0.1.2+ uses an **Async SQL Writer**. This means database operations
 
 ---
 
+## 🗺️ Roadmap
+
+### v0.2.0 - Multi-Platform Foundation (Q2 2026)
+- [ ] **Telegram Integration**: Full support for Telegram automation via `src/Telegram/`
+- [ ] **Repository Pattern**: Database-agnostic storage layer (SQLite, PostgreSQL, Redis)
+- [ ] **CI/CD Pipeline**: Automated testing and deployment workflows
+
+### v0.3.0 - Multi-Account & Production Tools (Q3 2026)
+- [ ] **Multi-Account Manager**: Single instance handling N accounts with context isolation
+- [ ] **Instagram Support**: Add `src/Instagram/` implementation
+- [ ] **Testing Suite**: Comprehensive pytest coverage for all modules
+- [ ] **Docker Support**: Containerized deployment for production environments
+
+### v0.4.0 - Enterprise Features (Q4 2026)
+- [ ] **Custom Platform SDK**: Framework for adding proprietary platforms (Arrattai, etc.)
+- [ ] **Webhook System**: Event-driven architecture for integrations
+- [ ] **Admin Dashboard**: Web UI for monitoring and managing multiple bots
+
+---
+
 _Made with passion by the Tweakio Team_
+
