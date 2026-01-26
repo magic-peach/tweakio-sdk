@@ -16,6 +16,7 @@ class Reply(ReplyCapableInterface):
     def __init__(self, page: Page):
         super().__init__(page=page)
 
+# Todo, In future Version Media Module will be added in the Reply to give the reference
     async def reply(self, Message: whatsapp_message, humanize: Humanized_Operation, text : Optional[str]) -> bool:
         try :
             side_click_success = await self.side_edge_click(Message=Message)
@@ -24,14 +25,17 @@ class Reply(ReplyCapableInterface):
             if not side_click_success:
                 raise Exception("WA")
 
+            # send the text as humanized safely
             in_box = sc.message_box(self.page)
             await in_box.click(timeout=3000)
-
             if not text: text = ""
             check_success = await humanize.typing(source=await in_box.element_handle(timeout=1000), text=text)
+
+            if check_success  :
+                await self.page.keyboard.press("Enter")
             return check_success
         except Exception as e:
-            logger.warning(f" WA / side_edge_click / Error : {e}", exc_info=True)
+            logger.warning(f" WA / reply / Error : {e}", exc_info=True)
             return False
 
 
@@ -57,6 +61,7 @@ class Reply(ReplyCapableInterface):
                 timeout=3000
             )
 
+            # Delay for UI reaction
             await self.page.wait_for_timeout(timeout=500)
             return True
 

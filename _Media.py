@@ -5,8 +5,8 @@ from pathlib import Path
 
 from playwright.async_api import Page, Locator, FileChooser
 
-from src.WhatsApp import selector_config as sc
 from Custom_logger import logger
+from src.WhatsApp import selector_config as sc
 
 
 # ----------------------------------------------------------------  #
@@ -72,9 +72,6 @@ async def InjectMedia(page: Page, files: list[str], mediatype: str = "doc") -> N
     try:
         await MenuClicker(page)
         media_input = await _getMediaInputLocator(page, mediatype)
-        if not media_input:
-            logger.info(f"❌ Media type button not visible for: {mediatype}")
-            return
 
         if not media_input:
             logger.info(f"Media input for type [ {mediatype} ] not found")

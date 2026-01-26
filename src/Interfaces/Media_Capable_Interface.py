@@ -10,10 +10,11 @@ from src.Interfaces.Message_Interface import message_interface
 
 
 class MediaType(str, Enum):
-    """Constant Type set"""
+    """Constant Media Type to restrict it to same names & constraint."""
     TEXT = "text"
     IMAGE = "image"
     VIDEO = "video"
+    AUDIO = "audio"
     DOCUMENT = "document"
 
 
@@ -27,12 +28,14 @@ class FileTyped:
 
 
 class MediaCapableInterface(ABC):
-    @abstractmethod
-    def __init__(self, page : Page):
-        pass
+    """Media Capable Interface"""
 
     @abstractmethod
-    async def media_add(self, mtype: MediaType, Message: message_interface, file: FileTyped) -> bool:
+    def __init__(self, page: Page):
+        self.page = page
+
+    @abstractmethod
+    async def add_media(self, mtype: MediaType, Message: message_interface, file: FileTyped) -> bool:
         """
         Attach Media given with the Type to attach to the message.
         Returns True if the media was successfully added else False.

@@ -1,12 +1,12 @@
 import random
 from typing import Union
 
-from playwright.async_api import Page, ElementHandle, Locator
+from playwright.async_api import Page, ElementHandle, Locator, Position
 
 import _Humanize as ha
 import _Media as med
-from src.WhatsApp import selector_config as sc
 from Custom_logger import logger
+from src.WhatsApp import selector_config as sc
 
 
 async def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> bool:
@@ -26,7 +26,7 @@ async def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) 
         rel_y = box["height"] / 2
 
         await message.click(
-            position={"x": rel_x, "y": rel_y},
+            position=Position(x=rel_x, y=rel_y),
             click_count=2,
             delay=random.randint(38, 69),
             timeout=3000
@@ -41,7 +41,7 @@ async def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) 
         return False
 
 
-async def _reply_(page: Page, message: Union[ElementHandle, Locator], text: str, retry: int = 0) -> bool:
+async def _reply_(page: Page, message: Union[ElementHandle, Locator], text: str, retry: int = 3) -> bool:
     """
     Core async function to type a reply into the message box without sending.
 
@@ -65,10 +65,10 @@ async def _reply_(page: Page, message: Union[ElementHandle, Locator], text: str,
         await ha.human_send(page, element=await inBox.element_handle(timeout=1000), text=text)
         return True
 
-    except Exception:
-        if retry < 1:
-            return await _reply_(page, message, text, retry + 1)
-        logger.error(f"[_reply_] Failed after retry", exc_info=True)
+    except Exception as e:
+        if retry != 0:
+            return await _reply_(page, message, text, retry - 1)
+        logger.error(f"[_reply_] Failed after retry // {e}", exc_info=True)
         return False
 
 
