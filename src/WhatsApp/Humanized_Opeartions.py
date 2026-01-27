@@ -35,7 +35,7 @@ class Humanized_Operation(humanize_operation):
 
             lines = text.split("\n")
 
-            if lent(text) <= 50:
+            if len(text) <= 50:
                 await self.page.keyboard.type(text=text, delay=random.randint(80, 100))
             else:
                 for i, line in enumerate(lines):
@@ -52,13 +52,13 @@ class Humanized_Operation(humanize_operation):
                         await self.page.keyboard.press("Shift+Enter")
             return True
         except Exception as e:
-            logger.warning(f" WA / Humanized_Operation / typing , Failed Typing : {e}", exc_info=True)
+            self.log.warning(f" WA / Humanized_Operation / typing , Failed Typing : {e}", exc_info=True)
             try:
                 await source.fill(text)
                 await self.page.keyboard.press("Enter")
                 return True
             except Exception as e:
-                logger.error(f" WA / Humanized_Operation / typing , Failed the direct fill .: {e}", exc_info=True)
+                self.log.error(f" WA / Humanized_Operation / typing , Failed the direct fill .: {e}", exc_info=True)
                 await self.page.keyboard.press("Escape", delay=0.5)
                 await self.page.keyboard.press("Escape", delay=0.5)
             return False

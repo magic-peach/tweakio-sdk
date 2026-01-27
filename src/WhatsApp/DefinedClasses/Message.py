@@ -8,7 +8,7 @@ from typing import Union, Literal, Optional
 
 from playwright.async_api import ElementHandle, Locator
 
-from Chat import whatsapp_chat
+from src.WhatsApp.DefinedClasses.Chat import whatsapp_chat
 from src.Interfaces.Message_Interface import message_interface
 
 

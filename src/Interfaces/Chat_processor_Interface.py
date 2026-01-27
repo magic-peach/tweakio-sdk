@@ -30,9 +30,8 @@ class chat_processor_interface(ABC):
         """Fetch and return limited chat objects"""
         pass
 
-    @staticmethod
     @abstractmethod
-    async def _click_chat(chat: Optional[chat_interface]) -> bool:
+    async def _click_chat(self, chat: Optional[chat_interface]) -> bool:
         """Click chat object"""
         pass
 

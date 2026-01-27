@@ -6,14 +6,13 @@ It will have in Extra as incoming and outgoing Message filters ,
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
 from typing import List, Optional
 
 from playwright.async_api import Page
 
-from Custom_logger import logger
 from sql_lite_storage import SQL_Lite_Storage
 from src.Decorators.Chat_Click_decorator import ensure_chat_clicked
+from src.Exceptions import MessageNotFoundError
 from src.Interfaces.Message_Processor_Interface import message_processor_interface
 from src.MessageFilter import Filter
 from src.WhatsApp import selector_config as sc
@@ -22,7 +21,6 @@ from src.WhatsApp.DefinedClasses.Chat import whatsapp_chat
 from src.WhatsApp.DefinedClasses.Message import whatsapp_message
 
 
-@dataclass
 class MessageProcessor(message_processor_interface):
 
     def __init__(
@@ -77,7 +75,7 @@ class MessageProcessor(message_processor_interface):
                     c2 += 1
 
                 if not data_id:
-                    logger.error("Data ID in WA / get wrapped Messages , None/Empty. Skipping")
+                    self.log.error("Data ID in WA / get wrapped Messages , None/Empty. Skipping")
                     continue
 
                 wrapped_list.append(
@@ -91,7 +89,7 @@ class MessageProcessor(message_processor_interface):
                     )
                 )
         except Exception as e:
-            logger.error(f"WA / [MessageProcessor] {e}", exc_info=True)
+            self.log.error(f"WA / [MessageProcessor] {e}", exc_info=True)
         return wrapped_list
 
     async def Fetcher(self, chat: whatsapp_chat, retry: int, *args, **kwargs) -> List[whatsapp_message]:
@@ -107,5 +105,5 @@ class MessageProcessor(message_processor_interface):
             return msgList
 
         except Exception as e:
-            logger.error(f"WA / [MessageProcessor] / Fetcher {e}", exc_info=True)
+            self.log.error(f"WA / [MessageProcessor] / Fetcher {e}", exc_info=True)
             return msgList

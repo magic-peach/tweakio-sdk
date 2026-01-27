@@ -3,8 +3,11 @@ WhatsApp Chat contracted with ChatInterface Template
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Optional
+import time
+from dataclasses import dataclass, field
+from typing import Optional, Union
+
+from playwright.async_api import ElementHandle, Locator
 
 from src.Interfaces.Chat_Interface import chat_interface
 

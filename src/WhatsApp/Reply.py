@@ -35,7 +35,7 @@ class Reply(ReplyCapableInterface):
                 await self.page.keyboard.press("Enter")
             return check_success
         except Exception as e:
-            logger.warning(f" WA / reply / Error : {e}", exc_info=True)
+            self.log.warning(f" WA / reply / Error : {e}", exc_info=True)
             return False
 
 
@@ -66,5 +66,5 @@ class Reply(ReplyCapableInterface):
             return True
 
         except Exception as e:
-            logger.error(f" WA / side_edge_click / Error : {e}", exc_info=True)
+            self.log.error(f" WA / side_edge_click / Error : {e}", exc_info=True)
             return False
