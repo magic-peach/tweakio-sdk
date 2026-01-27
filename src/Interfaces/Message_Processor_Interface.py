@@ -1,8 +1,11 @@
 """Message Processor Interface Must be implemented by every Message Processor implementation."""
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional
+
+from playwright.async_api import Page
 
 from src.Interfaces.Chat_Interface import chat_interface
 from src.MessageFilter import Filter
@@ -17,11 +20,15 @@ class message_processor_interface(ABC):
 
     def __init__(
             self,
+            log : logging.Logger,
+            page : Page,
             storage_obj: Optional[SQL_Lite_Storage] = None,
             filter_obj: Optional[Filter] = None
     ) -> None:
         self.storage = storage_obj
         self.filter = filter_obj
+        self.log = log
+        self.page = page
 
     @abstractmethod
     async def _get_wrapped_Messages(self, retry: int, *args, **kwargs) -> List[message_interface]: pass

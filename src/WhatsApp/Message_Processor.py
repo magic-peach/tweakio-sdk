@@ -5,20 +5,22 @@ It will have in Extra as incoming and outgoing Message filters ,
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import List, Optional
 
 from playwright.async_api import Page
 
-from src.WhatsApp import selector_config as sc
+from Custom_logger import logger
+from sql_lite_storage import SQL_Lite_Storage
 from src.Decorators.Chat_Click_decorator import ensure_chat_clicked
 from src.Interfaces.Message_Processor_Interface import message_processor_interface
+from src.MessageFilter import Filter
+from src.WhatsApp import selector_config as sc
 from src.WhatsApp.Chat_Processor import chat_processor
 from src.WhatsApp.DefinedClasses.Chat import whatsapp_chat
 from src.WhatsApp.DefinedClasses.Message import whatsapp_message
-from Custom_logger import logger
-from sql_lite_storage import SQL_Lite_Storage
-from src.MessageFilter import Filter
+
 
 @dataclass
 class MessageProcessor(message_processor_interface):
@@ -29,19 +31,23 @@ class MessageProcessor(message_processor_interface):
             filter_obj: Optional[Filter],
             chat_processor: chat_processor,
             page: Page,
+            log: logging.Logger,
     ) -> None:
-        super().__init__(storage_obj, filter_obj)
+        super().__init__(
+            storage_obj=storage_obj,
+            filter_obj=filter_obj,
+            log=log,
+            page=page)
         self.chat_processor = chat_processor
-        self.page = page
 
     @staticmethod
-    async def sort_messages(msgList: List[whatsapp_message], incoming : bool ) -> List[whatsapp_message]:
+    async def sort_messages(msgList: List[whatsapp_message], incoming: bool) -> List[whatsapp_message]:
         """
         Returns incoming messages sorted by direction.
         incoming : if true gives incoming messages , else false gives outgoing messages.
         """
         if not msgList: raise Exception("Cant Sort incoming messages/ List is Empty/None")
-        if incoming :
+        if incoming:
             return [msg for msg in msgList if msg.Direction == "in"]
         return [msg for msg in msgList if msg.Direction == "out"]
 
@@ -96,11 +102,10 @@ class MessageProcessor(message_processor_interface):
                 await self.storage.enqueue_insert(msgList)
 
             if self.filter:
-                msgList =self.filter.apply(msgList)
+                msgList = self.filter.apply(msgList)
 
             return msgList
 
         except Exception as e:
             logger.error(f"WA / [MessageProcessor] / Fetcher {e}", exc_info=True)
             return msgList
-

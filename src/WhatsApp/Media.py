@@ -19,8 +19,7 @@ class Media(MediaCapableInterface):
     """WhatsApp media capable Obj Class"""
 
     def __init__(self, page: Page, log: logging.Logger) -> None:
-        super().__init__(page=page)
-        self.log = log
+        super().__init__(page=page, log=log)
 
     async def menu_clicker(self):
         """Open WhatsApp menu for File sending selection"""

@@ -1,5 +1,6 @@
 """Storage Interface"""
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from typing import List, Dict
 
@@ -9,9 +10,10 @@ from src.Interfaces.Message_Interface import message_interface
 class StorageInterface(ABC):
     """Storage Interface"""
 
-    def __init__(self, queue: asyncio.Queue):
+    def __init__(self, queue: asyncio.Queue, log : logging.Logger):
         """This Queue is Explicitly given to work as a Global Enqueue."""
         self.queue = queue
+        self.log = log
 
     @abstractmethod
     def init_db(self): pass

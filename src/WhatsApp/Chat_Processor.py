@@ -3,15 +3,16 @@ WhatsApp based Chat Loader
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
 from playwright.async_api import Page, ElementHandle, Locator
 
-from src.WhatsApp import selector_config as sc
-from src.Interfaces.Chat_processor_Interface import chat_processor_interface
-from src.WhatsApp.DefinedClasses.Chat import whatsapp_chat
 from Custom_logger import logger
+from src.Interfaces.Chat_processor_Interface import chat_processor_interface
+from src.WhatsApp import selector_config as sc
+from src.WhatsApp.DefinedClasses.Chat import whatsapp_chat
 
 
 # Todo , add the paths for chatLoaderInterface , ChatInterface
@@ -22,8 +23,8 @@ class chat_processor(chat_processor_interface):
 
     # Todo About the capabilities adding dynamically via functions and other Loaders providing comparison
 
-    def __init__(self, page: Page) -> None:
-        self.page = page
+    def __init__(self, page: Page, log: logging.Logger) -> None:
+        super().__init__(page=page, log=log)
 
     async def fetch_chats(self, limit: int = 5, retry: int = 5) -> List[whatsapp_chat]:
         """Fetching chats in the loaded JS UI of web page of WhatsApp"""
@@ -74,7 +75,7 @@ class chat_processor(chat_processor_interface):
             handle: Optional[ElementHandle] = await chat.chatUI.element_handle(timeout=1500) \
                 if isinstance(chat.chatUI, Locator) \
                 else chat.chatUI if chat.chatUI is not None else None
-            #Todo Use ErrorTrack Class
+            # Todo Use ErrorTrack Class
             if handle is None: raise "Chat Object is Given None in WhatsApp chat loader / _click_chat"
 
             await handle.click(timeout=3500)

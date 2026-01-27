@@ -1,21 +1,21 @@
 """All Humanized Operation Classes"""
 from __future__ import annotations
 
+import logging
 import random
 from typing import Union, Optional
 
 import pyperclip
 from playwright.async_api import Page, ElementHandle, Locator
 
-from Custom_logger import logger
 from src.Interfaces.Humanize_Operation_Interface import humanize_operation
 
 
 class Humanized_Operation(humanize_operation):
     """WhatsApp  Customized Humanized Operation"""
 
-    def __init__(self, page: Page):
-        super().__init__(page=page)
+    def __init__(self, page: Page, log: logging.Logger):
+        super().__init__(page=page, log=log)
 
     async def typing(self, text: str, **kwargs) -> bool:
         source: Optional[Union[ElementHandle, Locator]] = kwargs.get("source") or None
@@ -31,7 +31,7 @@ class Humanized_Operation(humanize_operation):
             await source.press("Backspace")
 
             # Todo , grabbing the real clipboard context , by pyperclip for better debugging
-            logger.info("Cleared Previous text in input box")
+            self.log.info("Cleared Previous text in input box")
 
             lines = text.split("\n")
 

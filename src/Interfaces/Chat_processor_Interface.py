@@ -7,10 +7,12 @@ Any Specific Function will be defined via Child Class as if those are platform I
 """
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
 
 import ChatInterface
+from playwright.async_api import Page
 
 from Chat_Interface import chat_interface
 
@@ -19,6 +21,10 @@ class chat_processor_interface(ABC):
     """Chat Loader Interface"""
     capabilities: Dict[str, bool]
 
+    def __init__(self, log: logging.Logger, page : Page):
+        self.log = log
+        self.page = page
+
     @abstractmethod
     async def fetch_chats(self) -> List[chat_interface]:
         """Fetch and return limited chat objects"""
@@ -26,7 +32,7 @@ class chat_processor_interface(ABC):
 
     @staticmethod
     @abstractmethod
-    async def _click_chat(chat : Optional[chat_interface]) -> bool:
+    async def _click_chat(chat: Optional[chat_interface]) -> bool:
         """Click chat object"""
         pass
 

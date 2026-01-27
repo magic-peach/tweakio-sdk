@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import random
 
 from typing import Optional
@@ -10,11 +11,10 @@ from playwright.async_api import Page, Locator, Position
 from Humanized_Opeartions import Humanized_Operation
 from src.Interfaces.Reply_Capabale_Interface import ReplyCapableInterface
 from src.WhatsApp.DefinedClasses.Message import whatsapp_message
-from Custom_logger import logger
 import selector_config as sc
 class Reply(ReplyCapableInterface):
-    def __init__(self, page: Page):
-        super().__init__(page=page)
+    def __init__(self, page: Page, log : logging.Logger):
+        super().__init__(page=page, log=log)
 
 # Todo, In future Version Media Module will be added in the Reply to give the reference
     async def reply(self, Message: whatsapp_message, humanize: Humanized_Operation, text : Optional[str]) -> bool:

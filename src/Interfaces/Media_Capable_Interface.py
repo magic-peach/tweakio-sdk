@@ -1,4 +1,5 @@
 """Message Capable Interface , with custom metadata classes"""
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
@@ -31,8 +32,9 @@ class MediaCapableInterface(ABC):
     """Media Capable Interface"""
 
     @abstractmethod
-    def __init__(self, page: Page):
+    def __init__(self, page: Page, log : logging.Logger) -> None:
         self.page = page
+        self.log = log
 
     @abstractmethod
     async def add_media(self, mtype: MediaType, Message: message_interface, file: FileTyped) -> bool:
