@@ -8,7 +8,7 @@ from typing import Union
 
 from playwright.async_api import Page, ElementHandle, Locator
 
-from src.WhatsApp import selector_config as sc
+from src.WhatsApp import WebUISelector as sc
 from Custom_logger import logger
 
 

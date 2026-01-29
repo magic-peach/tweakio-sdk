@@ -12,7 +12,7 @@ from playwright.async_api import Locator
 from playwright.async_api import Page
 
 import directory as dirs
-from src.WhatsApp import selector_config as sc
+from src.WhatsApp import WebUISelector as sc
 from Errors import NumberNotFound, CountryNotFound, QRNotScanned, PageNotFound
 from Custom_logger import logger
 

@@ -11,7 +11,7 @@ from playwright.async_api import Page, Locator, ElementHandle
 
 import Extra as ex
 import directory as dirs
-from src.WhatsApp import selector_config as sc
+from src.WhatsApp import WebUISelector as sc
 from Errors import MessageNotFound
 from Custom_logger import logger
 from sql_lite_storage import SQL_Lite_Storage
