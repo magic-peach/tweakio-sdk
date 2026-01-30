@@ -13,8 +13,8 @@ from typing import Dict, List, Optional
 
 from playwright.async_api import Page
 
-from src.Interfaces.chatinterface import ChatInterface
-from src.WhatsApp.WebUISelector import WebSelectorConfig
+from src.Interfaces.chat_interface import ChatInterface
+from src.WhatsApp.web_ui_config import WebSelectorConfig
 
 
 class ChatProcessorInterface(ABC):
@@ -37,4 +37,4 @@ class ChatProcessorInterface(ABC):
         pass
 
     @abstractmethod
-    async def _get_Wrapped_Chat(self, *args, **kwargs) -> List[ChatInterface]: pass
+    async def _get_Wrapped_Chat(self, **kwargs) -> List[ChatInterface]: pass

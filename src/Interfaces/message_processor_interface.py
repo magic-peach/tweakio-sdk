@@ -7,11 +7,11 @@ from typing import List, Optional
 
 from playwright.async_api import Page
 
-from src.Interfaces.chatinterface import ChatInterface
-from src.MessageFilter import Filter
-from messageinterface import MessageInterface
-from sql_lite_storage import SQL_Lite_Storage
-from src.WhatsApp.WebUISelector import WebSelectorConfig
+from src.Interfaces.chat_interface import ChatInterface
+from src.FIlter.message_filter import MessageFilter
+from message_interface import MessageInterface
+from DepreciatedFiles__0_1_5_V_of_pypi.sql_lite_storage import SQL_Lite_Storage
+from src.WhatsApp.web_ui_config import WebSelectorConfig
 
 
 class MessageProcessorInterface(ABC):
@@ -25,7 +25,7 @@ class MessageProcessorInterface(ABC):
             page : Page,
             UIConfig: WebSelectorConfig,
             storage_obj: Optional[SQL_Lite_Storage] = None,
-            filter_obj: Optional[Filter] = None
+            filter_obj: Optional[MessageFilter] = None
     ) -> None:
         self.storage = storage_obj
         self.filter = filter_obj

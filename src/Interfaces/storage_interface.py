@@ -4,7 +4,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List, Dict
 
-from src.Interfaces.Message_Interface import message_interface
+from src.Interfaces.message_interface import MessageInterface
 
 
 class StorageInterface(ABC):
@@ -25,10 +25,10 @@ class StorageInterface(ABC):
     def start_writer(self, **kwargs): pass
 
     @abstractmethod
-    async def enqueue_insert(self, msgs: List[message_interface], **kwargs): pass
+    async def enqueue_insert(self, msgs: List[MessageInterface], **kwargs): pass
 
     @abstractmethod
-    async def _insert_batch_internally(self, msgs: List[message_interface], **kwargs): pass
+    async def _insert_batch_internally(self, msgs: List[MessageInterface], **kwargs): pass
 
     @abstractmethod
     def check_message_if_exists(self, msg_id: str, **kwargs) -> bool: pass

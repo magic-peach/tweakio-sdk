@@ -4,10 +4,10 @@ from abc import ABC, abstractmethod
 from playwright.async_api import Page
 import logging
 
-from src.Interfaces.Web_UI_Selector import WebUISelectorCapable
+from src.Interfaces.web_ui_selector import WebUISelectorCapable
 
 
-class humanize_operation(ABC):
+class HumanizeOperation(ABC):
     """
     All Humanized Altered Operation here.
     """

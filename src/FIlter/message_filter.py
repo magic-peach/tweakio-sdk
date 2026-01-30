@@ -38,7 +38,11 @@ class BindData:
 
 class MessageFilter:
     """
-    Independent, shared Message Filter
+    Independent, shared Message Filter.
+
+    function : apply
+        - using temporary Queue , Map , Persists the chat with its messages.
+        - Internally help setting the rate limiting
     """
 
     StateMap: dict[str, State] = {}
@@ -63,6 +67,14 @@ class MessageFilter:
         """
         Applies the filter on any set of Messages.
         Filter is agnostic to message direction or type.
+
+        uses 3 states :
+            - Deliver
+                If Everything passes ( spam check , LimitTime check) deliver messages.
+            - Delay
+                If spam detected delay the messages for next time.
+            - Drop
+                If delayed > LimitTime then drops the messages.
 
         Raises :
         - MessageFilterError if not all messages belong to 1 single-same chat

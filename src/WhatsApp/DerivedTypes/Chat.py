@@ -9,11 +9,11 @@ from typing import Optional, Union
 
 from playwright.async_api import ElementHandle, Locator
 
-from src.Interfaces.Chat_Interface import chat_interface
+from src.Interfaces.chat_interface import ChatInterface
 
 
 @dataclass
-class whatsapp_chat(chat_interface):
+class whatsapp_chat(ChatInterface):
     """WhatsApp wrapped Chat Object"""
 
     chatName: str

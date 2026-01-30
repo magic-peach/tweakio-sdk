@@ -1,24 +1,22 @@
 """Message Interface Protocol, Every Message Class have to Implement this interface"""
-from __future__ import annotations
+from typing import Protocol, Optional, Union
 
-from abc import ABC, abstractmethod
-from typing import Optional, Union
-
-from ChatInterface import ChatInterface
 from playwright.async_api import ElementHandle, Locator
 
+from src.Interfaces.chat_interface import ChatInterface
 
-class MessageInterface(ABC):
-    """Message Interface"""
 
-    System_Hit_Time: float
-    raw_Data: str
-    data_type: str
+class MessageInterface(Protocol):
+    """Message Interface Protocol, Every Message Class have to Implement this interface"""
+
+    system_hit_time: float
+    raw_data: str
+    data_type: Optional[str]
     parent_chat: ChatInterface
-    MessageUI: Optional[Union[ElementHandle, Locator]]
-    MessageID: Optional[str]
+    message_ui: Optional[Union[ElementHandle, Locator]]
+    message_id: Optional[str]
 
-    @abstractmethod
-    def _message_key(self, **kwargs) -> str:
-        """Returns the Hashed UI"""
-        pass
+
+def _message_key() -> str:
+    """Returns the Hashed UI"""
+    pass

@@ -6,69 +6,68 @@ import asyncio
 import logging
 import random
 from pathlib import Path
-from typing import Union
 
-from playwright.async_api import Page, ElementHandle, Locator, FileChooser
+from playwright.async_api import Page, Locator, FileChooser, TimeoutError as PlaywrightTimeoutError
 
+from src.Exceptions.whatsapp import MenuError, MediaCapableError, WhatsAppError
 from src.Interfaces.media_capable_interface import MediaCapableInterface, MediaType, FileTyped
-from src.Interfaces.message_interface import MessageInterface
 from src.Interfaces.web_ui_selector import WebUISelectorCapable
 
 
-class MediaHandle(MediaCapableInterface):
+class MediaCapable(MediaCapableInterface):
     """WhatsApp media capable Obj Class"""
 
     def __init__(self, page: Page, log: logging.Logger, UIConfig: WebUISelectorCapable) -> None:
         super().__init__(page=page, log=log, UIConfig=UIConfig)
 
-    async def menu_clicker(self):
+    async def menu_clicker(self) -> None:
         """Open WhatsApp menu for File sending selection"""
         try:
             menu_icon = await self.UIConfig.plus_rounded_icon(self.page).element_handle(timeout=1000)
 
             if not menu_icon:
-                self.log.error("WA / menu_clicker /Menu Icon not found ", exc_info=True)
-                return
+                raise MenuError("Menu Locator return None/Empty / menu_clicker / MediaCapable")
 
             await menu_icon.click(timeout=3000)
             await asyncio.sleep(random.uniform(1.0, 1.5))
-        except Exception as e:
-            self.log.error(f"Error at WA / menu_clicker : {e}", exc_info=True)
+
+        except PlaywrightTimeoutError as e:
 
             # Revert back to the condition .
             await self.page.keyboard.press("Escape", delay=0.5)
 
-    async def add_media(self, mtype: MediaType, Message: MessageInterface, file: FileTyped, **kwargs) -> bool:
-        # Open the Menu
+            raise MediaCapableError("Time out while clicking menu") from e
+
+    async def add_media(self, mtype: MediaType, file: FileTyped, **kwargs) -> bool:
+        # Open Menu
         await self.menu_clicker()
         try:
-            # Ready the target option
             target = await self._getOperational(mtype=mtype)
-            target = await target.element_handle(timeout=1000)
+            if not await target.is_visible(timeout=3000):
+                raise MediaCapableError("Attach option not visible")
 
-            if not await target.is_visible():
-                self.log.error(f"Attach option for '{mtype}' not visible", exc_info=True)
-                raise Exception("WA / add_media / Attach option not visible")
-
-            # Mock the File option selection
+            # File option selection
             with await self.page.expect_file_chooser() as fc:
                 await target.click(timeout=3000)
             chooser: FileChooser = fc.value
 
             # file.uri , that path must be existed in the system scope and file designated should be there
             p = Path(file.uri)
-            if not p.exists():
-                self.log.error(f"File not found: {file.uri}", exc_info=True)
-                return False
+            if not p.exists() or not p.is_file():
+                raise MediaCapableError(f"Invalid file path: {file.uri}")
 
+            # Set file
             await chooser.set_files(str(p.resolve()))
-            self.log.info(f" --- Sent {str(p.resolve())} , [Mtype] = [{mtype}] ")
+            self.log.debug(f" --- Sent {str(p.resolve())} , [Mtype] = [{mtype}] ")
             return True
-        except Exception as e:
-            self.log.error(f"Error at WA / add_media : {e}", exc_info=True)
-            return False
 
-    async def _getOperational(self, mtype: MediaType) -> Union[ElementHandle, Locator]:
+        except PlaywrightTimeoutError as e:
+            raise MediaCapableError("Timeout while resolving media option") from e
+
+        except WhatsAppError as e:
+            raise MediaCapableError("Unexpected Error in add_media") from e
+
+    async def _getOperational(self, mtype: MediaType) -> Locator:
         sc = self.UIConfig
         if mtype in (MediaType.TEXT, MediaType.IMAGE, MediaType.VIDEO):
             return sc.photos_videos(self.page)

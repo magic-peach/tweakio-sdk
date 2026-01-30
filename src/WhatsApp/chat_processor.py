@@ -8,11 +8,13 @@ import random
 from typing import Dict, List, Optional
 
 from playwright.async_api import Page, ElementHandle, Locator
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
-from src.Exceptions import ChatNotFoundError, ChatClickError
-from src.Interfaces.chatprocessorinterface import ChatProcessorInterface
-from src.WhatsApp.WebUISelector import WebSelectorConfig
-from src.WhatsApp.DefinedClasses.Chat import whatsapp_chat
+from src.Exceptions import ChatNotFoundError, ChatClickError, TweakioError
+from src.Exceptions.whatsapp import ChatProcessorError, ChatUnreadError, ChatMenuError, ChatError
+from src.Interfaces.chat_processor_interface import ChatProcessorInterface
+from src.WhatsApp.DerivedTypes.Chat import whatsapp_chat
+from src.WhatsApp.web_ui_config import WebSelectorConfig
 
 
 # Todo , add the paths for chatLoaderInterface , ChatInterface
@@ -21,85 +23,78 @@ class ChatProcessor(ChatProcessorInterface):
 
     # Todo About the capabilities adding dynamically via functions and other Loaders providing comparison
 
-    def __init__(self, page: Page, log: logging.Logger, UIConfig : WebSelectorConfig) -> None:
+    def __init__(self, page: Page, log: logging.Logger, UIConfig: WebSelectorConfig) -> None:
         super().__init__(page=page, log=log, UIConfig=UIConfig)
         self.capabilities: Dict[str, bool] = {}
 
     async def fetch_chats(self, limit: int = 5, retry: int = 5) -> List[whatsapp_chat]:
         """Fetching chats in the loaded JS UI of web page of WhatsApp"""
-        try:
-            ChatList: List[whatsapp_chat] = await self._get_Wrapped_Chat(limit=limit, retry=retry)
+        ChatList: List[whatsapp_chat] = await self._get_Wrapped_Chat(limit=limit, retry=retry)
 
-            if not ChatList:
-                self.log.error(f"Chat not found.")
-                raise ChatNotFoundError("Chats Not Found on the Page.")
+        if not ChatList:
+            raise ChatNotFoundError("Chats Not Found on the Page.")
 
-            return ChatList
-        except Exception as e:
-            self.log.critical(f"[WA / chat_processor] Error: {e}", exc_info=True)
-            return []
+        return ChatList
 
     async def _get_Wrapped_Chat(self, limit: int, retry: int) -> List[whatsapp_chat]:
         """List Based Raw data of chats"""
+        sc = self.UIConfig
+        wrapped: List[whatsapp_chat] = []
         try:
-            sc = self.UIConfig
-            chats = sc.chat_items()
-            wrapped: List[whatsapp_chat] = []
+            chats = sc.chat_items()  # return Locator of chats.
             counter = 0
             while not (await chats.count()) and counter < retry:
                 chats = sc.chat_items()
-                await  page.wait_for_timeout(1000)
+                await  self.page.wait_for_timeout(1000)
                 counter += 1
 
             count = await chats.count()
-            if not count: return wrapped
+            if not count: raise ChatNotFoundError("Chats Not Found.")
 
             minimum = min(count, limit)
             for i in range(minimum):
                 wrapperChat = whatsapp_chat(
                     chatUI=chats.nth(i),
-                    chatName= await sc.getChatName(chats.nth(i))
+                    chatName=await sc.getChatName(chats.nth(i))
                 )
                 wrapped.append(wrapperChat)
 
             return wrapped
-        except Exception as e:
-            self.log.error(f"[WA / chat_processor] Error: {e}", exc_info=True)
-            return []
+        except TweakioError as e:
+            raise ChatProcessorError("Failed to extract chat") from e
 
-#-------------------------------------------
+    # -------------------------------------------
 
-    async def _click_chat(self, chat: Optional[whatsapp_chat]) -> bool:
+    async def _click_chat(self, chat: Optional[whatsapp_chat], **kwargs) -> bool:
         """Chat Clicker to open."""
         try:
-            #---------------------
-            # Todo , add check if chat is None
-            #---------------------
+            if not chat:
+                raise ChatNotFoundError("none passed , expected chat in click chat")
 
             handle: Optional[ElementHandle] = await chat.chatUI.element_handle(timeout=1500) \
                 if isinstance(chat.chatUI, Locator) \
                 else chat.chatUI if chat.chatUI is not None else None
-            # Todo Use ErrorTrack Class
-            if handle is None: 
+
+            if handle is None:
                 raise ChatClickError("Chat Object is Given None in WhatsApp chat loader / _click_chat")
 
             await handle.click(timeout=3500)
             return True
-        except Exception as e:
-            self.log.error(f"WA / chat_processor / click_chat Error: {e}", exc_info=True)
-            return False
+        except PlaywrightTimeoutError as e:
+            raise ChatClickError("Failed to click chat in time.") from e
+        except TweakioError as e:
+            raise ChatClickError("Error in click the given chat.") from e
 
-    async def is_unread(self, chat: Optional[whatsapp_chat]) -> int:
+    @staticmethod
+    async def is_unread(chat: Optional[whatsapp_chat]) -> int:
         """
         Returns:
         1 → chat has actual unread messages (numeric badge),
         0 → manually marked as unread (no numeric badge) or none,
-        -1 → error occurred
         """
         try:
-            # Todo , Implement Error Class that can trace the Function Chain by itself
             if chat is None:
-                raise ValueError("WhatsAPP Chat Object is Given None in WhatsApp chat loader / is_unread")
+                raise ChatNotFoundError("none passed , expected chat in is_unread")
 
             handle: ElementHandle = await chat.chatUI.element_handle(timeout=1500) \
                 if isinstance(chat.chatUI, Locator) else chat.chatUI
@@ -111,26 +106,25 @@ class ChatProcessor(ChatProcessorInterface):
                     text = (await number_span.inner_text()).strip()
                     if text.isdigit(): return 1
             return 0
-        except Exception as e:
-            self.log.error(f"WA / chat_processor / is_unread Error: {e}", exc_info=True)
-            return -1
+        except TweakioError as e:
+            raise ChatUnreadError("Error in is_unread checking") from e
 
     async def do_unread(self, chat: Optional[whatsapp_chat]) -> bool:
         """
         Marks the given chat as unread by simulating right-click and selecting 'Mark as unread'.
         If already unread, logs info instead of failing.
         """
-        try:
-            if chat is None:
-                raise ValueError("WhatsAPP Chat Object is Given None in WhatsApp chat loader / do_unread")
+        page = self.page
 
+        if chat is None:
+            raise ChatNotFoundError("none passed , expected chat in do_unread")
+
+        try:
             chat_handle: ElementHandle = await chat.chatUI.element_handle(timeout=1500) \
                 if isinstance(chat.chatUI, Locator) else chat.chatUI
 
-            page = self.page
-            if not chat_handle:
-                self.log.warning("whatsApp chat loader / [do_unread] Chat handle not found")
-                return False
+            if chat.chatUI is None:
+                raise ChatError("chat UI not initialized")
 
             # Right-click on chat
             await chat_handle.click(button="right")
@@ -139,10 +133,11 @@ class ChatProcessor(ChatProcessorInterface):
             # Get the application menu as ElementHandle
             menu = await page.query_selector("role=application")
             if not menu:
-                raise Exception("whatsApp chat loader / [do_unread] , App Menu not found")
+                raise ChatMenuError("No chat menu found -- do_unread")
 
             # Look for 'Mark as unread' option inside menu
             unread_option = await menu.query_selector("li >> text=/mark.*as.*unread/i")
+
             if unread_option:
                 await unread_option.click(timeout=random.randint(1701, 2001))
                 self.log.info("whatsApp chat loader / [do_unread] Marked as unread ✅")
@@ -155,7 +150,10 @@ class ChatProcessor(ChatProcessorInterface):
                     self.log.info("whatsApp chat loader / [do_unread] Context menu option not found ❌")
 
             return True
-        except Exception as e:
-            self.log.error(f"whatsapp chat loader /  do_unread Error: {e}", exc_info=True)
-            # Todo Adding Whatsapp Specific Util to click WA icon to reset the do_unread Process
-            return False
+
+        except PlaywrightTimeoutError as e:
+            raise ChatUnreadError("Timeout while checking unread badge") from e
+
+        except TweakioError as e:
+            # Todo , recover() via WA Icon Click
+            raise ChatUnreadError("Error in do_unread checking") from e

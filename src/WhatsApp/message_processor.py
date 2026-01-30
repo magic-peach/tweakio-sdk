@@ -10,14 +10,15 @@ from typing import List, Optional
 
 from playwright.async_api import Page
 
-from sql_lite_storage import SQL_Lite_Storage
+from DepreciatedFiles__0_1_5_V_of_pypi.sql_lite_storage import SQL_Lite_Storage
 from src.Decorators.Chat_Click_decorator import ensure_chat_clicked
-from src.Interfaces.messageprocessorinterface import MessageProcessorInterface
-from src.MessageFilter import Filter
-from src.WhatsApp.ChatProcessor import ChatProcessor
-from src.WhatsApp.DefinedClasses.Chat import whatsapp_chat
-from src.WhatsApp.DefinedClasses.Message import whatsapp_message
-from src.WhatsApp.WebUISelector import WebSelectorConfig
+from src.Exceptions.whatsapp import MessageNotFoundError, WhatsAppError, MessageProcessorError, MessageListEmptyError
+from src.FIlter.message_filter import MessageFilter
+from src.Interfaces.message_processor_interface import MessageProcessorInterface
+from src.WhatsApp.DerivedTypes.Chat import whatsapp_chat
+from src.WhatsApp.DerivedTypes.Message import whatsapp_message
+from src.WhatsApp.chat_processor import ChatProcessor
+from src.WhatsApp.web_ui_config import WebSelectorConfig
 
 
 class MessageProcessor(MessageProcessorInterface):
@@ -25,7 +26,7 @@ class MessageProcessor(MessageProcessorInterface):
     def __init__(
             self,
             storage_obj: Optional[SQL_Lite_Storage],
-            filter_obj: Optional[Filter],
+            filter_obj: Optional[MessageFilter],
             chat_processor: ChatProcessor,
             page: Page,
             log: logging.Logger,
@@ -45,10 +46,12 @@ class MessageProcessor(MessageProcessorInterface):
         Returns incoming messages sorted by direction.
         incoming : if true gives incoming messages , else false gives outgoing messages.
         """
-        if not msgList: raise Exception("Cant Sort incoming messages/ List is Empty/None")
+        if not msgList:
+            raise MessageListEmptyError("Empty list passed in sort messages.")
+
         if incoming:
-            return [msg for msg in msgList if msg.Direction == "in"]
-        return [msg for msg in msgList if msg.Direction == "out"]
+            return [msg for msg in msgList if msg.direction == "in"]
+        return [msg for msg in msgList if msg.direction == "out"]
 
     @ensure_chat_clicked(lambda self, chat: self.ChatProcessor._click_chat(chat))
     async def _get_wrapped_Messages(
@@ -68,7 +71,8 @@ class MessageProcessor(MessageProcessorInterface):
                 count = await all_Msgs.count()
                 c += 1
 
-            if not count: raise Exception("Messages Not Found from UI / get wrapped messages / WA ")
+            if not count:
+                raise MessageNotFoundError("Messages Not able to extract")
 
             for i in range(count):
                 msg = all_Msgs.nth(i)
@@ -81,35 +85,31 @@ class MessageProcessor(MessageProcessorInterface):
                     c2 += 1
 
                 if not data_id:
-                    self.log.error("Data ID in WA / get wrapped Messages , None/Empty. Skipping")
+                    self.log.debug("Data ID in WA / get wrapped Messages , None/Empty. Skipping")
                     continue
 
                 wrapped_list.append(
                     whatsapp_message(
-                        MessageUI=msg,
-                        Direction="in" if await msg.locator(".message-in").count() > 0 else "out",
-                        raw_Data=text,
+                        message_ui=msg,
+                        direction="in" if await msg.locator(".message-in").count() > 0 else "out",
+                        raw_data=text,
                         parent_chat=chat,
                         data_id=data_id
                         # Todo , Adding proper Type Checking Message. [txt , ing , vid, quoted]
                     )
                 )
-        except Exception as e:
-            self.log.error(f"WA / [MessageProcessor] {e}", exc_info=True)
-        return wrapped_list
+
+            return wrapped_list
+        except WhatsAppError as e:
+            raise MessageProcessorError("failed to wrap messages") from e
 
     async def Fetcher(self, chat: whatsapp_chat, retry: int, *args, **kwargs) -> List[whatsapp_message]:
         msgList = await self._get_wrapped_Messages(chat, retry, *args, **kwargs)
 
-        try:
-            if self.storage:
-                await self.storage.enqueue_insert(msgList)
+        if self.storage:
+            await self.storage.enqueue_insert(msgList)
 
-            if self.filter:
-                msgList = self.filter.apply(msgList)
+        if self.filter:
+            msgList = self.filter.apply(msgList)
 
-            return msgList
-
-        except Exception as e:
-            self.log.error(f"WA / [MessageProcessor] / Fetcher {e}", exc_info=True)
-            return msgList
+        return msgList

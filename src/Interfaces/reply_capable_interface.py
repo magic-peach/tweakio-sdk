@@ -6,18 +6,20 @@ from typing import Optional
 
 from playwright.async_api import Page
 
-from src.Interfaces.Humanize_Operation_Interface import humanize_operation
-from src.Interfaces.Message_Interface import message_interface
+from src.Interfaces.humanize_operation_interface import HumanizeOperation
+from src.Interfaces.message_interface import MessageInterface
+from src.Interfaces.web_ui_selector import WebUISelectorCapable
 
 
 class ReplyCapableInterface(ABC):
     """AAbstract class to represent ReplyCapable interface"""
 
-    def __init__(self, page: Page, log: logging.Logger, **kwargs) -> None:
+    def __init__(self, page: Page, log: logging.Logger, UIConfig :WebUISelectorCapable ,  **kwargs) -> None:
         self.page = page
         self.log = log
+        self.UIConfig = UIConfig
 
     @abstractmethod
-    async def reply(self, Message: message_interface, humanize: humanize_operation, text: Optional[str], **kwargs) -> bool:
+    async def reply(self, Message: MessageInterface, humanize: HumanizeOperation, text: Optional[str], **kwargs) -> bool:
         """Reply  to the message and returns True on success else False"""
         pass

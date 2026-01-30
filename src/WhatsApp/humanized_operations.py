@@ -7,7 +7,9 @@ from typing import Union, Optional
 
 import pyperclip
 from playwright.async_api import Page, ElementHandle, Locator
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError, Error as PlaywrightError
 
+from src.Exceptions.base import ElementNotFoundError, HumanizedOperationError
 from src.Interfaces.humanize_operation_interface import HumanizeOperation
 from src.Interfaces.web_ui_selector import WebUISelectorCapable
 
@@ -15,13 +17,21 @@ from src.Interfaces.web_ui_selector import WebUISelectorCapable
 class HumanizedOperations(HumanizeOperation):
     """WhatsApp  Customized Humanized Operation"""
 
-    def __init__(self, page: Page, log: logging.Logger, UIConfig : WebUISelectorCapable):
+    def __init__(self, page: Page, log: logging.Logger, UIConfig: WebUISelectorCapable):
         super().__init__(page=page, log=log, UIConfig=UIConfig)
 
     async def typing(self, text: str, **kwargs) -> bool:
+        """
+        Do typing humanized on a given source/target element.
+
+        kwargs :
+            -source : expects source element to be clickable and start typing.
+
+
+        """
         source: Optional[Union[ElementHandle, Locator]] = kwargs.get("source") or None
         if not source:
-            raise Exception("Wrong Method Assigned , need clickable_source in wa/ humanize / typing")
+            raise ElementNotFoundError("Source Element not found.")
 
         try:
 
@@ -32,7 +42,7 @@ class HumanizedOperations(HumanizeOperation):
             await source.press("Backspace")
 
             # Todo , grabbing the real clipboard context , by pyperclip for better debugging
-            self.log.info("Cleared Previous text in input box")
+            self.log.info(f"Cleared Previous text & Typing at source : {source}")
 
             lines = text.split("\n")
 
@@ -52,19 +62,21 @@ class HumanizedOperations(HumanizeOperation):
                     if i < len(lines) - 1:
                         await self.page.keyboard.press("Shift+Enter")
             return True
-        except Exception as e:
-            self.log.warning(f" WA / Humanized_Operation / typing , Failed Typing : {e}", exc_info=True)
+        except (PlaywrightTimeoutError, PlaywrightError) as e:
+            self.log.debug("Humanized typing failed, falling back to instant fill", exc_info=e)
             return await self._Instant_fill(text=text, source=source)
 
     async def _Instant_fill(self, text: str, source: Optional[Union[ElementHandle, Locator]]) -> bool:
-        if not source :
-            raise Exception("WA / Humanized_Operation / __instant_fill, need clickable_source")
+        if not source:
+            raise ElementNotFoundError("Source is Empty in _instant_fill.")
+
         try:
             await source.fill(text)
             await self.page.keyboard.press("Enter")
             return True
-        except Exception as e:
-            self.log.error(f" WA / Humanized_Operation / typing , Failed the direct fill .: {e}", exc_info=True)
+        except (PlaywrightTimeoutError, PlaywrightError) as e:
             await self.page.keyboard.press("Escape", delay=0.5)
             await self.page.keyboard.press("Escape", delay=0.5)
-        return False
+            raise HumanizedOperationError(
+                "Instant fill failed. Typing operation was not successful."
+            ) from e

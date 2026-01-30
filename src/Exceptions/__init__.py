@@ -1,5 +1,5 @@
 """Tweakio SDK Exceptions Package"""
-from src.Exceptions.tweakio_exceptions import (
+from src.Exceptions.base import (
     TweakioError,
     ChatError,
     ChatNotFoundError,
