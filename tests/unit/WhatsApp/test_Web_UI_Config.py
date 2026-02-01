@@ -1,0 +1,109 @@
+"""
+Unit tests for WebSelectorConfig class.
+Tests cover locator construction and static helper methods.
+"""
+
+import logging
+from unittest.mock import Mock, AsyncMock
+
+import pytest
+from playwright.async_api import Page, Locator, ElementHandle
+
+from src.WhatsApp.web_ui_config import WebSelectorConfig
+
+
+# ============================================================================
+# FIXTURES
+# ============================================================================
+
+@pytest.fixture
+def mock_page():
+    return AsyncMock(spec=Page)
+
+
+@pytest.fixture
+def config_instance(mock_page):
+    return WebSelectorConfig(page=mock_page)
+
+
+# ============================================================================
+# TESTS
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_init_page_none():
+    with pytest.raises(ValueError, match="page must not be None"):
+        WebSelectorConfig(page=None)
+
+
+@pytest.mark.asyncio
+async def test_chat_list_locator(config_instance):
+    """Test chat_list return correct locator."""
+    config_instance.chat_list()
+    config_instance.page.get_by_role.assert_called()
+    args, kwargs = config_instance.page.get_by_role.call_args
+    assert args[0] == "grid"
+    assert "chat list" in str(kwargs["name"].pattern)
+
+
+@pytest.mark.asyncio
+async def test_total_chats(config_instance):
+    """Test total_chats returns integer from ari-rowcount."""
+    mock_grid = AsyncMock(spec=Locator)
+    mock_grid.get_attribute.return_value = "10"
+    config_instance.chat_list = Mock(return_value=mock_grid)
+
+    count = await config_instance.total_chats()
+    assert count == 10
+
+
+@pytest.mark.asyncio
+async def test_get_message_text_selectable(config_instance):
+    """Test get_message_text extracts text from span."""
+    mock_element = AsyncMock(spec=ElementHandle)
+    mock_span = AsyncMock(spec=ElementHandle)
+    
+    mock_element.query_selector.return_value = mock_span
+    mock_span.is_visible.return_value = True
+    mock_span.text_content.return_value = "Hello World"
+
+    text = await WebSelectorConfig.get_message_text(mock_element)
+    assert text == "Hello World"
+
+
+@pytest.mark.asyncio
+async def test_get_message_text_fallback(config_instance):
+    """Test get_message_text fallback to inner_text."""
+    mock_element = AsyncMock(spec=ElementHandle)
+    # query_selector returns None for the span
+    mock_element.query_selector.return_value = None
+    mock_element.inner_text.return_value = "Fallback Text"
+    
+    text = await WebSelectorConfig.get_message_text(mock_element)
+    
+    assert text == "Fallback Text"
+    mock_element.inner_text.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_is_message_out_element_handle(config_instance):
+    """Test is_message_out with ElementHandle."""
+    mock_msg = AsyncMock(spec=ElementHandle)
+    mock_out_el = AsyncMock(spec=ElementHandle)
+    mock_out_el.is_visible.return_value = True
+    mock_msg.query_selector.return_value = mock_out_el
+
+    result = await WebSelectorConfig.is_message_out(mock_msg)
+    assert result is True
+
+
+@pytest.mark.asyncio
+async def test_is_message_out_locator(config_instance):
+    """Test is_message_out with Locator."""
+    mock_msg = Mock(spec=Locator) 
+    mock_out_loc = AsyncMock(spec=Locator)
+    mock_out_loc.is_visible.return_value = True
+    mock_msg.locator.return_value = mock_out_loc
+
+    result = await WebSelectorConfig.is_message_out(mock_msg)
+    assert result is True
