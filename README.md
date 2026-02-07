@@ -40,6 +40,15 @@ WhatsApp automation is broken:
 **Roadmap**: Telegram (Q2 2026), Instagram (Q3 2026)
 
 ---
+# OSCG26_Guidelines
+
+This gist provides templates for the following 2 files 
+
+1. [OSCG_CONTRIBUTOR_Guidelines.md](OSCG_CONTRIBUTOR_Guidelines.md)
+2. [OSCG_MENTORS_Guidelines.md](OSCG_MENTORS_Guidelines.md)
+
+Contributors are to strictly follow `OSCG_CONTRIBUTOR_Guidelines.md` and mentors are to follow `OSCG_MENTORS_Guidelines.md` respectively 
+---
 
 ## 📦 Installation
 
