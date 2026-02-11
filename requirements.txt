@@ -50,7 +50,7 @@ maxminddb==2.8.2
 mccabe==0.7.0
 mdurl==0.1.2
 multivolumefile==0.2.3
-nh3==0.3.0
+nh3==0.3.2
 numpy==2.3.3
 orderly-set==5.5.0
 pillow==11.3.0
